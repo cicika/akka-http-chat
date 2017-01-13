@@ -19,7 +19,7 @@ abstract class ConcreteUsers extends UsersTable with RootConnector {
           .future()
   }
 
-  def getById(uuid: java.util.UUID): Future[Option[User]] = {
+  def byUuid(uuid: java.util.UUID): Future[Option[User]] = {
     select.where(_.uuid eqs uuid).one()
   }
 }
