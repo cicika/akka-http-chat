@@ -4,13 +4,13 @@ import chat.model._
 import com.outworkers.phantom.dsl._
 import scala.concurrent.Future
 
-class Users extends CassandraTable[ConcreteUsers, User] {
+class UsersTable extends CassandraTable[ConcreteUsers, User] {
   object uuid extends UUIDColumn(this) with PartitionKey
   object email extends StringColumn(this)
   object name extends StringColumn(this)
 }
 
-abstract class ConcreteUsers extends Users with RootConnector {
+abstract class ConcreteUsers extends UsersTable with RootConnector {
   def store(user: User): Future[ResultSet] = {
     insert.value(_.uuid, user.uuid)
           .value(_.email, user.email)
