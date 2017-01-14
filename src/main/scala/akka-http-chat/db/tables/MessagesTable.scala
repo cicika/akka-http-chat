@@ -7,7 +7,7 @@ import scala.concurrent.Future
 
 class MessagesTable extends CassandraTable[ConcreteMessages, Message] {
   object timestamp extends PrimitiveColumn[ConcreteMessages, Message, Long](this) with PrimaryKey
-  object conversation extends UUIDColumn(this) with Index with PartitionKey
+  object conversation extends UUIDColumn(this) with PartitionKey
   object sender extends StringColumn(this) with Index
   object recipients extends SetColumn[String](this) with Index
   object content extends StringColumn(this)

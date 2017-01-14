@@ -9,7 +9,6 @@ class ChatDatabase(override val connector: CassandraConnection)
   extends Database[ChatDatabase](connector) {
     object Users extends ConcreteUsers with connector.Connector
     object Messages extends ConcreteMessages with connector.Connector
- //   object UnreadMessages extends ConcreteUnreadMessages with connector.Connector
     object Conversations extends ConcreteConversations with connector.Connector
 }
 
