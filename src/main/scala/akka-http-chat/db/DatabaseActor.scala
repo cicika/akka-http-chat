@@ -31,10 +31,14 @@ class DatabaseActor extends Actor {
     case FetchMessages(None, Some(user)) =>
       val respondTo = sender()
       database.Messages.forUser(user) onSuccess {
-        case result => respondTo ! result
+        case result => 
+          respondTo ! result
+          // the following shouldn't be here, but in some business logic
+          // related actor
+          self ! MarkMessagesRead(result.map(m => Conversation(m.get.conversation, Set[String]())), user)
       }
-    case MarkMessagesRead(conversation, user) =>
-      database.Messages.removeRecipientFromUnreadBy(conversation, user)
+    case MarkMessagesRead(conversations, user) =>
+      database.Messages.removeRecipientFromUnreadBy(conversations, user)
   }
 
   def conversationCommands: Receive = {

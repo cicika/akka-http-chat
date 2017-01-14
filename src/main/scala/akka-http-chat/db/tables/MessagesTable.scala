@@ -50,8 +50,8 @@ abstract class ConcreteMessages extends MessagesTable with RootConnector {
           .fetch
   }
 
-  def removeRecipientFromUnreadBy(conversation: Conversation, user: User) = {
-    update.where(_.conversation eqs conversation.uuid)
+  def removeRecipientFromUnreadBy(conversations: List[Conversation], user: User) = {
+    update.where(_.conversation in conversations.map(c => c.uuid))
           .modify(_.unreadBy remove user.name)
           .future()
   }
