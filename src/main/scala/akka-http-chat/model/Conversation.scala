@@ -2,9 +2,9 @@ package chat.model
 
 case class Conversation(
   uuid: java.util.UUID,
-  users: List[String]
+  users: Set[String]
 ) {
   def addUser(user: User): Conversation = {
-    Conversation(uuid, user.name :: users)
+    Conversation(uuid, users + user.name)
   }
 }

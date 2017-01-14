@@ -7,7 +7,7 @@ import scala.concurrent.Future
 
 class ConversationsTable extends CassandraTable[ConcreteConversations, Conversation] {
   object uuid extends UUIDColumn(this) with PartitionKey
-  object users extends ListColumn[String](this)
+  object users extends SetColumn[String](this) with Index
 }
 
 abstract class ConcreteConversations extends ConversationsTable with RootConnector {
@@ -18,7 +18,11 @@ abstract class ConcreteConversations extends ConversationsTable with RootConnect
           .future()
   }
 
-  def getByUuid(uuid: java.util.UUID): Future[Option[Conversation]] = {
+  def byUuid(uuid: java.util.UUID): Future[Option[Conversation]] = {
     select.where(_.uuid eqs uuid).one()
   }
+
+  def forUser(user: User): Future[List[Conversation]] = {
+    select.where(_.users contains user.name).fetch()
+  } 
 }

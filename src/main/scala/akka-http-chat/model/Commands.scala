@@ -9,4 +9,4 @@ case class MarkMessagesRead(conversation: Conversation, user: User)
 case class MoveFromUnreadToMessages(conversation: Conversation)
 
 case class FetchConversations(user: Option[User])
-case class FetchConversation(conversation: Conversation)
+case class FetchConversation(uuid: java.util.UUID)

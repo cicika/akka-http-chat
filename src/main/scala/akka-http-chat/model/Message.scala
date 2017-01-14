@@ -11,6 +11,6 @@ case class UnreadMessage(
   timestamp: Long,
   conversation: java.util.UUID,
   sender: String,
-  recipients: List[String],
+  recipients: Set[String],
   content: String
 ){}

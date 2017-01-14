@@ -9,7 +9,7 @@ class UnreadMessagesTable extends CassandraTable[ConcreteUnreadMessages, UnreadM
                    with PartitionKey
   object conversation extends UUIDColumn(this) with Index
   object sender extends StringColumn(this)
-  object recipients extends ListColumn[String](this)
+  object recipients extends SetColumn[String](this) with Index
   object content extends StringColumn(this)
 }
 
@@ -28,9 +28,15 @@ abstract class ConcreteUnreadMessages extends UnreadMessagesTable with RootConne
     select.where(_.conversation eqs conversation.uuid).fetch
   }
 
+  def forConversationAndUser(conversation: Conversation, user: User): Future[List[UnreadMessage]] = {
+    select.where(_.conversation eqs conversation.uuid)
+          .and(_.recipients contains user.name)
+          .fetch
+  }
+
   def removeRecipient(conversation: Conversation, user: User) = {
     update.where(_.conversation eqs conversation.uuid)
-          .modify(_.recipients discard user.name)
+          .modify(_.recipients remove user.name)
           .future()
   }
 }
