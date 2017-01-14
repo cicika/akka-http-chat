@@ -4,6 +4,8 @@ import akka.actor._
 
 import chat.model._
 
+import com.outworkers.phantom.dsl.context
+
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -12,19 +14,41 @@ class DatabaseActor extends Actor {
   def receive = userCommands orElse messageCommands orElse conversationCommands
 
   def userCommands: Receive = {
-    case CreateUser(user) => 
-    case FetchUser(uuid) => 
+    case CreateUser(user) => database.Users.store(user)
+    case FetchUser(uuid) =>
+      val respondTo = sender()
+      database.Users.byUuid(uuid) onSuccess {
+        case result => respondTo ! result
+      } 
   }
 
   def messageCommands: Receive = {
     case FetchMessages(conversation) =>
+      val respondTo = sender()
+      database.Messages.forConversation(conversation) onSuccess {
+        case result => respondTo ! result
+      }
     case FetchUnreadMessages(conversation, user) =>
+      val respondTo = sender()
+      database.UnreadMessages.forConversationAndUser(conversation, user) onSuccess {
+        case result => respondTo ! result
+      }
     case MarkMessagesRead(conversation, user) =>
+      database.UnreadMessages.removeRecipient(conversation, user)
     case MoveFromUnreadToMessages(conversation) =>
+
   }
 
   def conversationCommands: Receive = {
-    case FetchConversations(Some(user)) =>
-    case FetchConversation(conversation) =>
+    case FetchConversations(user) => 
+      // if the user is getting all of their conversations, we need to
+      // query both Messages and UndreadMessages to get last message,
+      // would it be worth creating another table by Cassandra's data 
+      // modelling rules? (and duplicate some more data in the process)
+    case FetchConversation(uuid) =>
+      val respondTo = sender()
+      database.Conversations.byUuid(uuid) onSuccess {
+        case result => respondTo ! result
+      }
   }
 }
