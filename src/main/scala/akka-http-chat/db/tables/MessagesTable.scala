@@ -28,6 +28,7 @@ abstract class ConcreteMessages extends MessagesTable with RootConnector {
 
   def forConversation(conversation: Conversation): Future[List[Message]] = {
     select.where(_.conversation eqs conversation.uuid)
+          .orderBy(_.timestamp desc)
           .fetch
   }
 
