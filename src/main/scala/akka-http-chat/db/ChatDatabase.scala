@@ -7,10 +7,14 @@ import tables._
 
 class ChatDatabase(override val connector: CassandraConnection)
   extends Database[ChatDatabase](connector) {
-    object users extends UsersTable with connector.Connector
-    object messages extends MessagesTable with connector.Connector
-    object unreadMessages extends UnreadMessagesTable with connector.Connector
-    object conversations extends ConversationsTable with connector.Connector
+    object Users extends ConcreteUsers with connector.Connector
+    object Messages extends ConcreteMessages with connector.Connector
+    object UnreadMessages extends ConcreteUnreadMessages with connector.Connector
+    object Conversations extends ConcreteConversations with connector.Connector
 }
 
-object DB extends ChatDatabase(connector)
+object ChatDatabase extends ChatDatabase(connector)
+
+trait ChatDbProvider extends DatabaseProvider[ChatDatabase] {
+  override def database: ChatDatabase = ChatDatabase
+}
