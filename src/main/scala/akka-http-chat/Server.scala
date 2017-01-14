@@ -13,9 +13,11 @@ object Server extends ChatService {
   def main(args: Array[String]):Unit = {
     implicit val system = ActorSystem("akka-http-chat")
     implicit val materializer = ActorMaterializer()
-
+    implicit val ec = system.dispatcher
+    
     println("Starting up....")
     val config = ConfigFactory.load()
+    database.create()
 
     system.actorOf(Props[DatabaseActor].withRouter(RoundRobinPool(10)), "database-actor")
     
