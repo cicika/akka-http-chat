@@ -20,7 +20,7 @@ trait UserService extends ChatJsonProtocol {
           actor ! CreateUser(user)
           complete(user)
         case Failure(ex) =>
-          log.error("Could not acquire database actor!")
+          log.error("Could not acquire database actor!", ex)
           complete {
             StatusCodes.InternalServerError
           }
