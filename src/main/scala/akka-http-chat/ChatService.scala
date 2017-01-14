@@ -1,8 +1,9 @@
 package chat
 
-import akka.actor.{Actor, ActorContext}
+import akka.actor.{Actor, ActorContext, ActorSystem}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.util.Timeout
 
 import http._
 
@@ -13,25 +14,27 @@ trait ChatService extends UserService
                      with ConversationService
                      with MessageService {
 
-  def chatRoute = openRoute ~ conversationsRoute
+  implicit val timeout = Timeout(5 seconds)
 
-  def openRoute = {
+  def chatRoute(sys: ActorSystem) = openRoute(sys) ~ conversationsRoute
+
+  def openRoute = (sys: ActorSystem) => {
     post {
       path("users"){
-        postUser
+        postUser(sys.actorSelection("database-actor").resolveOne)
       }
     }
   }
 
-  def conversationsRoute(uuid: java.util.UUID) = {
+  def conversationsRoute = {
     get {
       path("conversations"){
        getAllConversations
       }
     } ~
     get {
-      path("conversations" / Segment){
-        getConversation
+      path("conversations" / JavaUUID){ uuid =>
+        getConversation(uuid)
       }
     } 
   } 

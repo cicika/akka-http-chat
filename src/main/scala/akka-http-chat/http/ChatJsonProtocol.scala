@@ -15,6 +15,7 @@ trait ChatJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     }
   }
 
+  implicit val baseUserFormat = jsonFormat2(BaseUser)
   implicit val userFormat = jsonFormat3(User)
   implicit val messageFormat = jsonFormat4(Message)
   implicit val unreadMessageFormat = jsonFormat5(UnreadMessage)
