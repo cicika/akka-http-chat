@@ -39,4 +39,9 @@ abstract class ConcreteUnreadMessages extends UnreadMessagesTable with RootConne
           .modify(_.recipients remove user.name)
           .future()
   }
+
+  def deleteIfRead(conversation: Conversation) = {
+    delete.where(_.conversation eqs conversation.uuid)
+          .and(_.recipients in null)
+  }
 }

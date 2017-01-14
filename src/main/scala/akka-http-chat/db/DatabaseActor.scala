@@ -35,16 +35,12 @@ class DatabaseActor extends Actor {
       }
     case MarkMessagesRead(conversation, user) =>
       database.UnreadMessages.removeRecipient(conversation, user)
-    case MoveFromUnreadToMessages(conversation) =>
-
+      database.UnreadMessages.deleteIfRead(conversation)
   }
 
   def conversationCommands: Receive = {
     case FetchConversations(user) => 
-      // if the user is getting all of their conversations, we need to
-      // query both Messages and UndreadMessages to get last message,
-      // would it be worth creating another table by Cassandra's data 
-      // modelling rules? (and duplicate some more data in the process)
+
     case FetchConversation(uuid) =>
       val respondTo = sender()
       database.Conversations.byUuid(uuid) onSuccess {
