@@ -13,7 +13,28 @@ import scala.util.{Success, Failure}
 
 trait ConversationService extends ChatJsonProtocol {
 
-  def getConversation(uuid: java.util.UUID) = {
+  def getConversation = (uuid: java.util.UUID, databaseActor: Future[ActorRef]) => {
+    onComplete(databaseActor) {
+      case Success(actor) =>
+        onComplete((actor ? FetchMessages(Some(Conversation(uuid, Set[String]())), None)).mapTo[List[Message]]) {
+          case Success(messages) if messages.isEmpty =>
+            complete {
+              StatusCodes.NotFound
+            }
+          case Success(messages) =>
+            complete(messages)
+          case Failure(ex) =>
+            log.error(s"Something exploded in the database for conversation $uuid")
+            complete {
+              StatusCodes.InternalServerError
+            }
+        }
+      case Failure(ex) =>
+        log.error("Could not acquire database actor!")
+        complete {
+          StatusCodes.InternalServerError
+        }
+    }
     complete {
       StatusCodes.NotImplemented
     }
@@ -25,7 +46,7 @@ trait ConversationService extends ChatJsonProtocol {
         onComplete((actor ? FetchMessages(None, Some(user))).mapTo[List[Option[Message]]]) {
           case Success(messages) =>
             // here, messages should be repacked to exclude extra data
-            complete(messages.toVector)
+            complete(messages)
           case Failure(ex) =>
             complete {
               StatusCodes.NotFound
