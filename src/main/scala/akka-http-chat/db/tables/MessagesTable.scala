@@ -6,8 +6,8 @@ import com.outworkers.phantom.builder.query._
 import scala.concurrent.Future
 
 class MessagesTable extends CassandraTable[ConcreteMessages, Message] {
-  object timestamp extends PrimitiveColumn[ConcreteMessages, Message, Long](this) with PartitionKey
-  object conversation extends UUIDColumn(this) with Index
+  object timestamp extends PrimitiveColumn[ConcreteMessages, Message, Long](this) with PrimaryKey
+  object conversation extends UUIDColumn(this) with Index with PartitionKey
   object sender extends StringColumn(this) with Index
   object recipients extends SetColumn[String](this) with Index
   object content extends StringColumn(this)
@@ -31,15 +31,17 @@ abstract class ConcreteMessages extends MessagesTable with RootConnector {
           .fetch
   }
 
-  def forUser(user: User): Future[List[Message]] = {
+  def forUser(user: User): Future[List[Option[Message]]] = {
     for {
       asSender <-
         select.where(_.sender eqs user.name)
-              .fetch
+              .orderBy(_.timestamp desc)
+              .one()
       asRecipient <-
         select.where(_.recipients contains user.name)
-              .fetch
-    } yield asSender ++ asRecipient
+              .orderBy(_.timestamp desc)
+              .one()
+    } yield asSender :: List(asRecipient)
   }
 
   def unreadForUser(user: User): Future[List[Message]] = {
