@@ -1,7 +1,8 @@
-package chat.db
+package chat.actor
 
 import akka.actor._
 
+import chat.db._
 import chat.model._
 
 import com.outworkers.phantom.dsl.context
@@ -42,8 +43,8 @@ class DatabaseActor extends Actor {
   }
 
   def conversationCommands: Receive = {
-    case FetchConversations(user) => 
-
+    case CreateConversation(conversation) => 
+      database.Conversations.store(conversation)
     case FetchConversation(uuid) =>
       val respondTo = sender()
       database.Conversations.byUuid(uuid) onSuccess {

@@ -7,5 +7,6 @@ case class FetchMessages(conversationOpt: Option[Conversation] = None, userOpt: 
 case class FetchUnreadMessages(conversation: Conversation, user: User)
 case class MarkMessagesRead(conversations: List[Conversation], user: User)
 
+case class CreateConversation(conversation: Conversation)
 case class FetchConversations(user: Option[User])
 case class FetchConversation(uuid: java.util.UUID)

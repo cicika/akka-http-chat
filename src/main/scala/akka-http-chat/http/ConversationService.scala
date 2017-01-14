@@ -9,6 +9,7 @@ import chat.model._
 import chat.util._
 
 import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Success, Failure}
 
 trait ConversationService extends ChatJsonProtocol {
@@ -53,10 +54,25 @@ trait ConversationService extends ChatJsonProtocol {
             }
         }
       case Failure(ex) =>
-        log.error("Could not acquire database actor!")
+        log.error("Could not acquire database actor!", ex)
           complete {
             StatusCodes.InternalServerError
           }
+    }
+  }
+
+  def createConversation = (user: User, databaseActor: Future[ActorRef]) => {
+    entity(as[Conversation]) { conversation =>
+      onComplete(databaseActor) {
+        case Success(actor) => 
+          actor ! CreateConversation(conversation)
+          complete(conversation)
+        case Failure(ex) =>
+          log.error("Could not acquire database actor!", ex)
+          complete {
+            StatusCodes.InternalServerError
+          }
+      }
     }
   }
 }
