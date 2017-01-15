@@ -40,11 +40,20 @@ class DatabaseActor extends Actor {
       }
     case MarkMessagesRead(conversations, user) =>
       database.Messages.removeRecipientFromUnreadBy(conversations, user)
+    case StoreMessage(message) =>
+      database.Messages.store(message)
   }
 
   def conversationCommands: Receive = {
     case CreateConversation(conversation) => 
       database.Conversations.store(conversation)
+    case FetchConversationForUsers(users) =>
+      val respondTo = sender()
+      database.Conversations.forUsers(users) onSuccess {
+        case result =>
+          respondTo ! result
+      }
+
     case FetchConversation(uuid) =>
       val respondTo = sender()
       database.Conversations.byUuid(uuid) onSuccess {
