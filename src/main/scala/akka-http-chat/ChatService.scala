@@ -13,32 +13,55 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ChatService extends UserService
                      with ConversationService
-                     with ChatAuthenticator {
+                     with ChatAuthenticator
+                     with WebSocketService {
 
   implicit val timeout = Timeout(5 seconds)
 
-  def chatRoute(sys: ActorSystem) = openRoute(sys) ~
-                                    authenticateBasicAsync(realm = realm, authenticator) {
-                                      user => conversationsRoute(user, sys)
-                                    } ~ complete(StatusCodes.NotFound)
+  def chatRoute(system: ActorSystem) =
+    openRoute(system) ~
+    authenticate { user =>
+      conversationsRoute(user, system)
+    } ~
+    authenticate { user =>
+      wsRoute(user, system)
+    }
 
-  def openRoute = (sys: ActorSystem) => {
+  def openRoute = (system: ActorSystem) => {
     post {
-      path("users"){
-        postUser(sys.actorSelection("/user/database-actor").resolveOne)
+      path("users") {
+        postUser(system.actorSelection("/user/database-actor").resolveOne)
       }
     }
   }
 
-  def conversationsRoute(user: User, sys: ActorSystem) = {
+  def conversationsRoute(user: User, system: ActorSystem) = {
+    post {
+      path("conversations") {
+        createConversation(user, system.actorSelection("/user/conversation-supervisor").resolveOne)
+      }
+    } ~
     get {
-      path("conversations"){
-       getAllConversations(user, sys.actorSelection("database-actor").resolveOne)
+      path("conversations") {
+       getAllConversations(user, system.actorSelection("/user/database-actor").resolveOne)
       }
     } ~
     get {
       path("conversations" / JavaUUID){ uuid =>
-        getConversation(uuid, sys.actorSelection("database-actor").resolveOne)
+        getConversation(uuid, system.actorSelection("/user/database-actor").resolveOne)
+      }
+    }
+    
+  }
+
+  def wsRoute(user: User, system: ActorSystem) = {
+    get {
+      path("chat") {
+        parameterMap { params =>
+          handleWebSocketMessages(
+            webSocketHandler(params, user, system)
+          )
+        }
       }
     }
   }
