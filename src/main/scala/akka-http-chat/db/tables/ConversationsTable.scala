@@ -4,6 +4,7 @@ import chat.model._
 import com.outworkers.phantom.dsl._
 import java.util.UUID
 import scala.concurrent.Future
+import scala.util.{Success, Failure}
 
 class ConversationsTable extends CassandraTable[ConcreteConversations, Conversation] {
   object uuid extends UUIDColumn(this) with PartitionKey
@@ -24,5 +25,14 @@ abstract class ConcreteConversations extends ConversationsTable with RootConnect
 
   def forUser(user: User): Future[List[Conversation]] = {
     select.where(_.users contains user.name).fetch()
-  } 
+  }
+
+  def forUsers(users: Set[String]) : Future[Option[Conversation]] = {
+    //this has a bug, sizes of the sets need to be compared too in order
+    // to be certain that it's a single conversation
+    val q = select.where(_.users contains users.head)
+    users.tail.foldLeft(q){ (acc, user) =>
+          acc.and(_.users contains user)
+    }.allowFiltering().one()
+  }
 }

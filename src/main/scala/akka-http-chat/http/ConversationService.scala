@@ -61,12 +61,19 @@ trait ConversationService extends ChatJsonProtocol {
     }
   }
 
-  def createConversation = (user: User, databaseActor: Future[ActorRef]) => {
-    entity(as[Conversation]) { conversation =>
-      onComplete(databaseActor) {
+  def createConversation = (user: User, conversationSupervisor: Future[ActorRef]) => {
+    entity(as[Map[String, Array[String]]]) { users =>
+      val conversation = Conversation(java.util.UUID.randomUUID(), users("users").toSet)
+      onComplete(conversationSupervisor) {
         case Success(actor) => 
-          actor ! CreateConversation(conversation)
-          complete(conversation)
+          onComplete((actor ? CreateConversation(conversation.addUser(user))).mapTo[Conversation]) {
+            case Success(conversation) => complete(conversation)
+            case Failure(ex) =>
+              log.error(s"Something blew up, $ex")
+              complete {
+                StatusCodes.InternalServerError
+              }
+          }          
         case Failure(ex) =>
           log.error("Could not acquire database actor!", ex)
           complete {
