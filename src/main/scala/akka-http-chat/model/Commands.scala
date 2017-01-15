@@ -10,3 +10,6 @@ case class MarkMessagesRead(conversations: List[Conversation], user: User)
 case class CreateConversation(conversation: Conversation)
 case class FetchConversations(user: Option[User])
 case class FetchConversation(uuid: java.util.UUID)
+
+case class WsConnectionOpen(user: String)
+case class WsConnectionClosed(user: String)

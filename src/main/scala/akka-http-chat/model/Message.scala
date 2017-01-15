@@ -10,3 +10,14 @@ case class Message(
   content: String,
   unreadBy: Set[String]
 ){}
+
+case class IncomingMessage(
+  conversation: UUID,
+  sender: String,
+  content: String
+){}
+
+case class OutgoingMessage(
+  sender: String,
+  content: String
+){}
